@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 type DBTX interface {
@@ -11,15 +12,15 @@ type DBTX interface {
 	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
 	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
 }
-type qq struct {
+type repository struct {
 	db DBTX
 }
 
 func NewRepository(db DBTX) Repository {
-	return &qq{db}
+	return &repository{db}
 }
 
-func (r *qq) CreateUser(ctx context.Context, user *User) (*User, error) {
+func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) {
 	var lastInsertId int
 	query := "INSERT INTO users(username, password, email) VALUES ($1,$2,$3) returning id"
 	err := r.db.QueryRowContext(ctx, query, user.Username, user.Password, user.Email).Scan(&lastInsertId)
@@ -28,4 +29,15 @@ func (r *qq) CreateUser(ctx context.Context, user *User) (*User, error) {
 	}
 	user.ID = int64(lastInsertId)
 	return user, nil
+}
+
+func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	u := User{}
+	fmt.Println("test")
+	query := "SELECT id, email, username, password FROM users WHERE email = $1"
+	err := r.db.QueryRowContext(ctx, query, email).Scan(&u.ID, &u.Email, &u.Username, &u.Password)
+	if err != nil {
+		return &u, err
+	}
+	return &u, nil
 }
