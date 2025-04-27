@@ -40,8 +40,6 @@ const App = () => {
   // get clients in the room
   useEffect(() => {
     if (conn === null) {
-      console.log("fuck");
-
       router.push("/");
       return;
     }
